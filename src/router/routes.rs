@@ -15,7 +15,7 @@ use axum::{
     Router,
 };
 
-pub async fn routing() {
+pub async fn routing(addr: String, port: i32) {
     let app = Router::new()
         // Webpage routes
         .route("/", get(index_handler))
@@ -41,7 +41,7 @@ pub async fn routing() {
         .route("/data/settings/:name", get(setting_flag_handler))
         .route("/data/settings/update", post(update_settings_handler));
 
-    let listener = tokio::net::TcpListener::bind("localhost:8080")
+    let listener = tokio::net::TcpListener::bind(format!("{addr}:{port}"))
         .await
         .expect("Error in TcpListener");
     axum::serve(listener, app).await.unwrap_or_default();
