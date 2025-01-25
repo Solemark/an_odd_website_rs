@@ -1,78 +1,54 @@
-use super::settings::{get_settings_list, Setting};
+use super::settings::get_settings_list;
 use axum::{body::Body, extract::Path, http::StatusCode, response::Response};
 use std::fs::read_to_string;
 
-pub(crate) async fn index_handler() -> Response {
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("Content-Type", "text/html")
-        .body(Body::from(check_dashboard(format!(
-            "{}{}",
-            get_page_head("Dashboard"),
-            read_to_string("static/index.html")
-                .unwrap_or_else(|err| format!("{}", err))
-                .replace("<!--NAVBAR-->", &get_navbar(String::from(""))),
-        ))))
-        .unwrap_or_default()
+pub async fn index_handler() -> Response {
+    webpage_builder("static/index.html", "dashboard").await
 }
 
-fn check_dashboard(webpage: String) -> String {
-    match get_settings_list()
-        .into_iter()
-        .filter(|s| s.name == "enable-dashboard")
-        .collect::<Vec<Setting>>()
-        .first()
-        .unwrap_or(&Setting {
-            name: String::from("enable-dashboard"),
-            status: false,
-        })
-        .status
-    {
-        true => webpage.replace(
-            "<!--DASHBOARD-->",
-            &read_to_string("static/components/dashboard.html").unwrap_or_default(),
-        ),
-        false => webpage,
-    }
+pub async fn webpage_handler(Path(page): Path<String>) -> Response {
+    webpage_builder(&format!("static/{page}.html"), &page).await
 }
 
-pub(crate) async fn webpage_handler(Path(page): Path<String>) -> Response {
+async fn webpage_builder(path: &str, page: &str) -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "text/html")
         .body(Body::from(format!(
             "{}{}",
             get_page_head(&page),
-            read_to_string(format!("static/{}.html", page))
-                .unwrap_or_else(|err| format!("{}", err))
-                .replace("<!--NAVBAR-->", &get_navbar(page)),
+            get_file(&path)
+                .await
+                .replace("<!--NAVBAR-->", &get_navbar(path))
         )))
         .unwrap_or_default()
 }
 
-pub(crate) async fn style_handler(Path(style): Path<String>) -> Response {
+pub async fn style_handler(Path(style): Path<String>) -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "text/css")
         .body(Body::from(
-            read_to_string(format!("static/styles/{}.css", style))
-                .unwrap_or_else(|err| format!("{}", err)),
+            get_file(&format!("static/styles/{style}.css")).await,
         ))
         .unwrap_or_default()
 }
 
-pub(crate) async fn script_handler(Path(script): Path<String>) -> Response {
+pub async fn script_handler(Path(script): Path<String>) -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "text/javascript")
         .body(Body::from(
-            read_to_string(format!("static/scripts/{}.js", script))
-                .unwrap_or_else(|err| format!("{}", err)),
+            get_file(&format!("static/scripts/{script}.js")).await,
         ))
         .unwrap_or_default()
 }
 
-fn get_navbar(page: String) -> String {
+async fn get_file(path: &str) -> String {
+    read_to_string(path).unwrap_or_else(|e| format!("{}", e))
+}
+
+fn get_navbar(page: &str) -> String {
     let mut navbar = read_to_string("static/components/navbar.html")
         .unwrap_or_default()
         .replace(
@@ -111,6 +87,9 @@ fn get_page_head(page: &str) -> String {
             "<!--SCRIPT-->",
             "<script defer src=\"scripts/settings\"></script>",
         ),
-        _ => head,
+        _ => head.replace(
+            "<!--SCRIPT-->",
+            "<script defer src=\"scripts/dashboard\"></script>",
+        ),
     }
 }

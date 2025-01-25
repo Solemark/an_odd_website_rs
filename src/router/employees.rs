@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct Employee {
+pub struct Employee {
     id: usize,
     first_name: String,
     last_name: String,
@@ -32,7 +32,7 @@ impl Helpers for Employee {
     }
 }
 
-pub(crate) async fn employee_data_handler() -> Response {
+pub async fn employee_data_handler() -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -65,7 +65,7 @@ fn parse_employee(s: &str) -> Employee {
     }
 }
 
-pub(crate) async fn new_employee_handler(Form(emp): Form<Employee>) -> Redirect {
+pub async fn new_employee_handler(Form(emp): Form<Employee>) -> Redirect {
     let employee_list = get_employee_list();
     let ell = employee_list.len();
     write_to_file(
@@ -85,7 +85,7 @@ pub(crate) async fn new_employee_handler(Form(emp): Form<Employee>) -> Redirect 
     Redirect::to("/employees")
 }
 
-pub(crate) async fn remove_employee_handler(Form(emp): Form<Employee>) -> Redirect {
+pub async fn remove_employee_handler(Form(emp): Form<Employee>) -> Redirect {
     write_to_file(
         get_employee_list()
             .into_iter()
@@ -109,7 +109,7 @@ pub(crate) async fn remove_employee_handler(Form(emp): Form<Employee>) -> Redire
     Redirect::to("/employees")
 }
 
-pub(crate) async fn update_employee_handler(Form(emp): Form<Employee>) -> Redirect {
+pub async fn update_employee_handler(Form(emp): Form<Employee>) -> Redirect {
     write_to_file(
         get_employee_list()
             .into_iter()

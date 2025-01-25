@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct Client {
+pub struct Client {
     id: usize,
     first_name: String,
     last_name: String,
@@ -32,7 +32,7 @@ impl Helpers for Client {
     }
 }
 
-pub(crate) async fn client_data_handler() -> Response {
+pub async fn client_data_handler() -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -64,7 +64,7 @@ fn parse_client(s: &str) -> Client {
     }
 }
 
-pub(crate) async fn new_client_handler(Form(cli): Form<Client>) -> Redirect {
+pub async fn new_client_handler(Form(cli): Form<Client>) -> Redirect {
     let client_list = get_client_list();
     let cll = client_list.len();
     write_to_file(
@@ -83,7 +83,7 @@ pub(crate) async fn new_client_handler(Form(cli): Form<Client>) -> Redirect {
     Redirect::to("/clients")
 }
 
-pub(crate) async fn remove_client_handler(Form(cli): Form<Client>) -> Redirect {
+pub async fn remove_client_handler(Form(cli): Form<Client>) -> Redirect {
     write_to_file(
         get_client_list()
             .into_iter()
@@ -106,7 +106,7 @@ pub(crate) async fn remove_client_handler(Form(cli): Form<Client>) -> Redirect {
     Redirect::to("/clients")
 }
 
-pub(crate) async fn update_client_handler(Form(cli): Form<Client>) -> Redirect {
+pub async fn update_client_handler(Form(cli): Form<Client>) -> Redirect {
     write_to_file(
         get_client_list()
             .into_iter()

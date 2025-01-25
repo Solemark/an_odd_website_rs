@@ -1,6 +1,7 @@
 use super::helpers::{to_json_string, write_to_file, Helpers};
 use axum::{
     body::Body,
+    extract::Path,
     http::StatusCode,
     response::{Redirect, Response},
     Form,
@@ -8,10 +9,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
-#[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct Setting {
-    pub(crate) name: String,
-    pub(crate) status: bool,
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+pub struct Setting {
+    pub name: String,
+    pub status: bool,
 }
 impl Helpers for Setting {
     fn to_json(&self) -> String {
@@ -25,7 +26,7 @@ impl Helpers for Setting {
     }
 }
 
-pub(crate) async fn setting_data_handler() -> Response {
+pub async fn setting_data_handler() -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -33,7 +34,23 @@ pub(crate) async fn setting_data_handler() -> Response {
         .unwrap_or_default()
 }
 
-pub(crate) async fn update_settings_handler(Form(set): Form<Setting>) -> Redirect {
+pub async fn setting_flag_handler(Path(name): Path<String>) -> Response {
+    let data = get_settings_list();
+    let mut check = Setting { name, status: true };
+    if !data.contains(&check) {
+        check.status = false;
+    }
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Body::from(format!(
+            "{{\"name\":\"{}\",\"status\":\"{}\"}}",
+            check.name, check.status
+        )))
+        .unwrap_or_default()
+}
+
+pub async fn update_settings_handler(Form(set): Form<Setting>) -> Redirect {
     write_to_file(
         get_settings_list()
             .into_iter()
@@ -53,7 +70,7 @@ pub(crate) async fn update_settings_handler(Form(set): Form<Setting>) -> Redirec
     Redirect::to("/settings")
 }
 
-pub(crate) fn get_settings_list() -> Vec<Setting> {
+pub fn get_settings_list() -> Vec<Setting> {
     read_to_string("data/settings.csv")
         .unwrap_or_default()
         .lines()

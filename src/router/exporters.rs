@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct Job {
+pub struct Job {
     id: usize,
     name: String,
     created: String,
@@ -30,7 +30,7 @@ impl Helpers for Job {
     }
 }
 
-pub(crate) async fn get_jobs_handler() -> Response {
+pub async fn get_jobs_handler() -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -38,7 +38,7 @@ pub(crate) async fn get_jobs_handler() -> Response {
         .unwrap_or_default()
 }
 
-pub(crate) async fn new_jobs_handler(Form(job): Form<Job>) -> Redirect {
+pub async fn new_jobs_handler(Form(job): Form<Job>) -> Redirect {
     let jobs_list = get_jobs_list();
     let jll = jobs_list.len();
     write_to_file(
@@ -76,7 +76,7 @@ fn parse_job(s: &str) -> Job {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct Export {
+pub struct Export {
     id: usize,
     name: String,
 }
@@ -95,7 +95,7 @@ impl Helpers for Export {
     }
 }
 
-pub(crate) async fn get_exports_handler() -> Response {
+pub async fn get_exports_handler() -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

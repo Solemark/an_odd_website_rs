@@ -7,7 +7,7 @@ use crate::router::{
         update_employee_handler,
     },
     exporters::{get_exports_handler, get_jobs_handler, new_jobs_handler},
-    settings::{setting_data_handler, update_settings_handler},
+    settings::{setting_data_handler, setting_flag_handler, update_settings_handler},
     website::{index_handler, script_handler, style_handler, webpage_handler},
 };
 use axum::{
@@ -15,7 +15,7 @@ use axum::{
     Router,
 };
 
-pub(crate) async fn routing() {
+pub async fn routing() {
     let app = Router::new()
         // Webpage routes
         .route("/", get(index_handler))
@@ -38,6 +38,7 @@ pub(crate) async fn routing() {
         .route("/data/exports", get(get_exports_handler))
         // Setting routes
         .route("/data/settings", get(setting_data_handler))
+        .route("/data/settings/:name", get(setting_flag_handler))
         .route("/data/settings/update", post(update_settings_handler));
 
     let listener = tokio::net::TcpListener::bind("localhost:8080")
