@@ -19,7 +19,7 @@ async fn webpage_builder(path: &str, page: &str) -> Response {
             get_page_head(&page),
             get_file(&path)
                 .await
-                .replace("<!--NAVBAR-->", &get_navbar(path))
+                .replace("<!--NAVBAR-->", &get_navbar(page))
         )))
         .unwrap_or_default()
 }
@@ -49,6 +49,13 @@ async fn get_file(path: &str) -> String {
 }
 
 fn get_navbar(page: &str) -> String {
+    let page = {
+        if page == "dashboard" {
+            ""
+        } else {
+            page
+        }
+    };
     let mut navbar = read_to_string("static/components/navbar.html")
         .unwrap_or_default()
         .replace(
