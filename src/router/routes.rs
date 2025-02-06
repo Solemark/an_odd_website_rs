@@ -20,9 +20,9 @@ pub async fn routing(addr: String, port: i32) {
     let app = Router::new()
         // Webpage routes
         .route("/", get(index_handler))
-        .route("/:page", get(webpage_handler))
-        .route("/styles/:style", get(style_handler))
-        .route("/scripts/:script", get(script_handler))
+        .route("/{page}", get(webpage_handler))
+        .route("/styles/{style}", get(style_handler))
+        .route("/scripts/{script}", get(script_handler))
         // Client routes
         .route("/data/clients", get(client_data_handler))
         .route("/data/clients/new", post(new_client_handler))
@@ -39,7 +39,7 @@ pub async fn routing(addr: String, port: i32) {
         .route("/data/exports", get(get_exports_handler))
         // Setting routes
         .route("/data/settings", get(setting_data_handler))
-        .route("/data/settings/:name", get(setting_flag_handler))
+        .route("/data/settings/{name}", get(setting_flag_handler))
         .route("/data/settings/update", post(update_settings_handler));
 
     let listener = tokio::net::TcpListener::bind(format!("{addr}:{port}"))
