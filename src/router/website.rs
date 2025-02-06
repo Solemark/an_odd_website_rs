@@ -16,8 +16,8 @@ fn webpage_builder(path: &str, page: &str) -> Response {
         .header("Content-Type", "text/html")
         .body(Body::from(format!(
             "{}{}",
-            get_page_head(&page),
-            get_file(&path).replace("<!--NAVBAR-->", &get_navbar(page))
+            get_page_head(page),
+            get_file(path).replace("<!--NAVBAR-->", &get_navbar(page))
         )))
         .unwrap_or_default()
 }
