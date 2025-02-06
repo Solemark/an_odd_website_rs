@@ -33,9 +33,10 @@ pub async fn routing(addr: String, port: i32) {
         .route("/data/employees/new", post(new_employee_handler))
         .route("/data/employees/update", post(update_employee_handler))
         .route("/data/employees/remove", post(remove_employee_handler))
-        // Exporters routes
+        // Jobs routes
         .route("/data/jobs", get(get_jobs_handler))
         .route("/data/jobs/new", post(new_jobs_handler))
+        // Exports routes
         .route("/data/exports", get(get_exports_handler))
         // Setting routes
         .route("/data/settings", get(setting_data_handler))
