@@ -1,4 +1,7 @@
-use std::{fs::File, io::Write};
+use std::{
+    fs::{read_to_string, File},
+    io::Write,
+};
 
 pub trait Helpers {
     fn to_json(&self) -> String;
@@ -11,6 +14,14 @@ pub fn to_json_string<T: Helpers>(arr: Vec<T>) -> String {
         output += &format!("{},", item.to_json());
     }
     format!("[{}]", &output[0..output.len() - 1])
+}
+
+pub fn get_list<T: Helpers>(name: &str, parse: fn(&str) -> T) -> Vec<T> {
+    read_to_string(format!("data/{name}.csv"))
+        .unwrap_or_default()
+        .lines()
+        .map(parse)
+        .collect()
 }
 
 pub fn write_to_file<T: Helpers>(arr: Vec<T>, filename: String) {

@@ -1,4 +1,4 @@
-use super::helpers::{to_json_string, write_to_file, Helpers};
+use super::common::{get_list, to_json_string, write_to_file, Helpers};
 use axum::{
     body::Body,
     extract::Form,
@@ -6,7 +6,6 @@ use axum::{
     response::{Redirect, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::fs::read_to_string;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Employee {
@@ -37,7 +36,7 @@ pub async fn employee_data_handler() -> Response {
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(to_json_string(
-            get_employee_list()
+            get_list("employees", parse_employee)
                 .into_iter()
                 .filter(|e| e.visible)
                 .collect(),
@@ -45,28 +44,8 @@ pub async fn employee_data_handler() -> Response {
         .unwrap_or_default()
 }
 
-fn get_employee_list() -> Vec<Employee> {
-    read_to_string("data/employees.csv")
-        .unwrap_or_default()
-        .lines()
-        .map(parse_employee)
-        .collect()
-}
-
-fn parse_employee(s: &str) -> Employee {
-    let e = s.split(',').collect::<Vec<&str>>();
-    Employee {
-        id: e[0].parse::<usize>().unwrap_or_default(),
-        first_name: String::from(e[1]),
-        last_name: String::from(e[1]),
-        email: String::from(e[3]),
-        role: String::from(e[4]),
-        visible: e[5].parse::<bool>().unwrap_or_default(),
-    }
-}
-
 pub async fn new_employee_handler(Form(emp): Form<Employee>) -> Redirect {
-    let employee_list = get_employee_list();
+    let employee_list = get_list("employees", parse_employee);
     let ell = employee_list.len();
     write_to_file(
         employee_list
@@ -87,7 +66,7 @@ pub async fn new_employee_handler(Form(emp): Form<Employee>) -> Redirect {
 
 pub async fn remove_employee_handler(Form(emp): Form<Employee>) -> Redirect {
     write_to_file(
-        get_employee_list()
+        get_list("employees", parse_employee)
             .into_iter()
             .map(|e| {
                 if e.id == emp.id {
@@ -111,11 +90,23 @@ pub async fn remove_employee_handler(Form(emp): Form<Employee>) -> Redirect {
 
 pub async fn update_employee_handler(Form(emp): Form<Employee>) -> Redirect {
     write_to_file(
-        get_employee_list()
+        get_list("employees", parse_employee)
             .into_iter()
             .map(|e| if e.id == emp.id { emp.clone() } else { e })
             .collect(),
         "employees".to_string(),
     );
     Redirect::to("/employees")
+}
+
+fn parse_employee(s: &str) -> Employee {
+    let e = s.split(',').collect::<Vec<&str>>();
+    Employee {
+        id: e[0].parse::<usize>().unwrap_or_default(),
+        first_name: String::from(e[1]),
+        last_name: String::from(e[1]),
+        email: String::from(e[3]),
+        role: String::from(e[4]),
+        visible: e[5].parse::<bool>().unwrap_or_default(),
+    }
 }

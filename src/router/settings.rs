@@ -1,4 +1,4 @@
-use super::helpers::{to_json_string, write_to_file, Helpers};
+use super::common::{get_list, to_json_string, write_to_file, Helpers};
 use axum::{
     body::Body,
     extract::Path,
@@ -7,7 +7,6 @@ use axum::{
     Form,
 };
 use serde::{Deserialize, Serialize};
-use std::fs::read_to_string;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Setting {
@@ -30,12 +29,15 @@ pub async fn setting_data_handler() -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
-        .body(Body::from(to_json_string(get_settings_list())))
+        .body(Body::from(to_json_string(get_list(
+            "settings",
+            parse_setting,
+        ))))
         .unwrap_or_default()
 }
 
 pub async fn setting_flag_handler(Path(name): Path<String>) -> Response {
-    let data = get_settings_list();
+    let data = get_list("settings", parse_setting);
     let mut check = Setting { name, status: true };
     if !data.contains(&check) {
         check.status = false;
@@ -52,7 +54,7 @@ pub async fn setting_flag_handler(Path(name): Path<String>) -> Response {
 
 pub async fn update_settings_handler(Form(set): Form<Setting>) -> Redirect {
     write_to_file(
-        get_settings_list()
+        get_list("settings", parse_setting)
             .into_iter()
             .map(|s| {
                 if s.name == set.name {
@@ -70,15 +72,7 @@ pub async fn update_settings_handler(Form(set): Form<Setting>) -> Redirect {
     Redirect::to("/settings")
 }
 
-pub fn get_settings_list() -> Vec<Setting> {
-    read_to_string("data/settings.csv")
-        .unwrap_or_default()
-        .lines()
-        .map(parse_setting)
-        .collect()
-}
-
-fn parse_setting(s: &str) -> Setting {
+pub fn parse_setting(s: &str) -> Setting {
     let str = s.split(',').collect::<Vec<&str>>();
     Setting {
         name: str[0].to_string(),

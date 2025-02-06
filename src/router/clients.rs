@@ -1,4 +1,4 @@
-use super::helpers::{to_json_string, write_to_file, Helpers};
+use super::common::{get_list, to_json_string, write_to_file, Helpers};
 use axum::{
     body::Body,
     extract::Form,
@@ -6,7 +6,6 @@ use axum::{
     response::{Redirect, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::fs::read_to_string;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Client {
@@ -37,7 +36,7 @@ pub async fn client_data_handler() -> Response {
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(to_json_string(
-            get_client_list()
+            get_list("clients", parse_client)
                 .into_iter()
                 .filter(|c| c.visible)
                 .collect(),
@@ -45,27 +44,8 @@ pub async fn client_data_handler() -> Response {
         .unwrap_or_default()
 }
 
-fn get_client_list() -> Vec<Client> {
-    read_to_string("data/clients.csv")
-        .unwrap_or_default()
-        .lines()
-        .map(parse_client)
-        .collect()
-}
-
-fn parse_client(s: &str) -> Client {
-    let c: Vec<&str> = s.split(',').collect();
-    Client {
-        id: c[0].parse::<usize>().unwrap_or_default(),
-        first_name: String::from(c[1]),
-        last_name: String::from(c[2]),
-        email: String::from(c[3]),
-        visible: c[4].parse::<bool>().unwrap_or_default(),
-    }
-}
-
 pub async fn new_client_handler(Form(cli): Form<Client>) -> Redirect {
-    let client_list = get_client_list();
+    let client_list = get_list("clients", parse_client);
     let cll = client_list.len();
     write_to_file(
         client_list
@@ -85,7 +65,7 @@ pub async fn new_client_handler(Form(cli): Form<Client>) -> Redirect {
 
 pub async fn remove_client_handler(Form(cli): Form<Client>) -> Redirect {
     write_to_file(
-        get_client_list()
+        get_list("clients", parse_client)
             .into_iter()
             .map(|c| {
                 if c.id == cli.id {
@@ -108,11 +88,22 @@ pub async fn remove_client_handler(Form(cli): Form<Client>) -> Redirect {
 
 pub async fn update_client_handler(Form(cli): Form<Client>) -> Redirect {
     write_to_file(
-        get_client_list()
+        get_list("clients", parse_client)
             .into_iter()
             .map(|c| if c.id == cli.id { cli.clone() } else { c })
             .collect(),
         "clients".to_string(),
     );
     Redirect::to("/clients")
+}
+
+fn parse_client(s: &str) -> Client {
+    let c: Vec<&str> = s.split(',').collect();
+    Client {
+        id: c[0].parse::<usize>().unwrap_or_default(),
+        first_name: String::from(c[1]),
+        last_name: String::from(c[2]),
+        email: String::from(c[3]),
+        visible: c[4].parse::<bool>().unwrap_or_default(),
+    }
 }
