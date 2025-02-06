@@ -13,7 +13,11 @@ pub fn to_json_string<T: Helpers>(arr: Vec<T>) -> String {
     for item in arr {
         output += &format!("{},", item.to_json());
     }
-    format!("[{}]", &output[0..output.len() - 1])
+    if output.len() > 0 {
+        format!("[{}]", &output[0..output.len() - 1])
+    } else {
+        "{}".to_string()
+    }
 }
 
 pub fn get_list<T: Helpers>(name: &str, parse: fn(&str) -> T) -> Vec<T> {
